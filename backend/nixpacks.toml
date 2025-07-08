@@ -1,0 +1,17 @@
+﻿[providers]
+nodejs = "18.17.0"
+
+[variables]
+NODE_ENV = "production"
+
+[phases.install]
+cmd = "npm ci"
+
+[phases.build]  
+cmd = "npm run build"
+
+[phases.start]
+cmd = "npm start"
+
+[start]
+cmd = "npm start"

@@ -1,5 +1,5 @@
 [build]
-builder = "NIXPACKS"
+builder = "DOCKERFILE"
 
 [deploy]
 healthcheckPath = "/health"
@@ -9,7 +9,3 @@ restartPolicyMaxRetries = 10
 
 [env]
 NODE_ENV = "production"
-
-# 强制使用Nixpacks构建设置
-[build.nixpacks]
-app = "node" 

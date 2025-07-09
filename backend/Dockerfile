@@ -9,7 +9,7 @@ RUN apk add --no-cache curl
 COPY package*.json ./
 
 # 安装依赖
-RUN npm ci
+RUN npm install --production=false
 
 # 复制Prisma配置
 COPY prisma ./prisma/

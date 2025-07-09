@@ -72,7 +72,9 @@ export class AuthService {
   // 生成JWT Token
   private generateToken(payload: AuthTokenPayload): string {
     return (jwt.sign as any)(payload, JWT_SECRET, {
-      expiresIn: JWT_EXPIRES_IN
+      expiresIn: JWT_EXPIRES_IN,
+      issuer: 'blog-backend',
+      audience: 'blog-frontend'
     })
   }
 

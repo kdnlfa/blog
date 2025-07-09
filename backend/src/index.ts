@@ -2,11 +2,24 @@ import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
 import rateLimit from 'express-rate-limit'
+import { PrismaClient } from '@prisma/client'
 import authRoutes from './routes/auth.routes'
 import articleRoutes from './routes/article.routes'
 
 const app = express()
 const PORT = process.env.PORT || 8000
+const prisma = new PrismaClient()
+
+// 数据库连接检查
+async function checkDatabaseConnection() {
+  try {
+    await prisma.$connect()
+    console.log('✅ 数据库连接成功')
+  } catch (error) {
+    console.error('❌ 数据库连接失败:', error)
+    process.exit(1)
+  }
+}
 
 // 安全中间件
 app.use(helmet({
@@ -107,34 +120,53 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 })
 
 // 启动服务器
-app.listen(PORT, () => {
-  console.log(`🚀 服务器启动成功！`)
-  console.log(`📍 地址: http://localhost:${PORT}`)
-  console.log(`🔧 环境: ${process.env.NODE_ENV || 'development'}`)
-  console.log(`💾 数据库: SQLite`)
-  console.log(`📋 API文档: http://localhost:${PORT}/`)
-  console.log('\n可用端点:')
-  console.log(`  GET  /health              - 健康检查`)
-  console.log(`  POST /api/auth/register   - 用户注册`)
-  console.log(`  POST /api/auth/login      - 用户登录`)
-  console.log(`  GET  /api/auth/me         - 获取用户信息`)
-  console.log(`  PUT  /api/auth/profile    - 更新用户资料`)
-  console.log(`  PUT  /api/auth/password   - 修改密码`)
-  console.log(`  POST /api/auth/logout     - 用户登出`)
-  console.log(`  GET  /api/articles        - 获取文章列表`)
-  console.log(`  POST /api/articles        - 创建文章`)
-  console.log(`  GET  /api/articles/:id    - 获取文章详情`)
-  console.log(`  PUT  /api/articles/:id    - 更新文章`)
-  console.log(`  DELETE /api/articles/:id  - 删除文章`)
-})
+async function startServer() {
+  try {
+    // 检查数据库连接
+    await checkDatabaseConnection()
+    
+    // 启动HTTP服务器
+    app.listen(PORT, () => {
+      console.log(`🚀 服务器启动成功！`)
+      console.log(`📍 地址: http://localhost:${PORT}`)
+      console.log(`🔧 环境: ${process.env.NODE_ENV || 'development'}`)
+      console.log(`💾 数据库: PostgreSQL`)
+      console.log(`📋 API文档: http://localhost:${PORT}/`)
+      console.log('\n可用端点:')
+      console.log(`  GET  /health              - 健康检查`)
+      console.log(`  POST /api/auth/register   - 用户注册`)
+      console.log(`  POST /api/auth/login      - 用户登录`)
+      console.log(`  GET  /api/auth/me         - 获取用户信息`)
+      console.log(`  PUT  /api/auth/profile    - 更新用户资料`)
+      console.log(`  PUT  /api/auth/password   - 修改密码`)
+      console.log(`  POST /api/auth/logout     - 用户登出`)
+      console.log(`  GET  /api/articles        - 获取文章列表`)
+      console.log(`  POST /api/articles        - 创建文章`)
+      console.log(`  GET  /api/articles/:id    - 获取文章详情`)
+      console.log(`  PUT  /api/articles/:id    - 更新文章`)
+      console.log(`  DELETE /api/articles/:id  - 删除文章`)
+    })
+  } catch (error) {
+    console.error('❌ 服务器启动失败:', error)
+    process.exit(1)
+  }
+}
+
+// 启动应用
+startServer()
 
 // 优雅关闭
-process.on('SIGTERM', () => {
-  console.log('\n🛑 收到SIGTERM信号，开始优雅关闭...')
-  process.exit(0)
-})
+async function gracefulShutdown(signal: string) {
+  console.log(`\n🛑 收到${signal}信号，开始优雅关闭...`)
+  try {
+    await prisma.$disconnect()
+    console.log('✅ 数据库连接已关闭')
+    process.exit(0)
+  } catch (error) {
+    console.error('❌ 关闭过程中出现错误:', error)
+    process.exit(1)
+  }
+}
 
-process.on('SIGINT', () => {
-  console.log('\n🛑 收到SIGINT信号，开始优雅关闭...')
-  process.exit(0)
-}) 
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'))
+process.on('SIGINT', () => gracefulShutdown('SIGINT')) 

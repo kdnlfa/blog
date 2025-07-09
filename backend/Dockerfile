@@ -2,14 +2,17 @@ FROM node:22-alpine
 
 WORKDIR /app
 
-# 安装curl用于健康检查
-RUN apk add --no-cache curl
+# 安装必要工具
+RUN apk add --no-cache curl python3 make g++ && \
+    npm cache clean --force
 
 # 复制package文件
 COPY package*.json ./
 
-# 安装依赖
-RUN npm install --production=false
+# 清理并安装依赖
+RUN npm config set fetch-timeout 300000 && \
+    npm config set fetch-retry-maxtimeout 300000 && \
+    npm install --verbose --production=false
 
 # 复制Prisma配置
 COPY prisma ./prisma/
